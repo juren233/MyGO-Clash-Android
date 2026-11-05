@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.net.ConnectivityManager
+import android.net.LinkProperties
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
@@ -58,6 +59,11 @@ class ClashVpnService : VpnService() {
                     .addDnsServer(TUN_DNS)
                     .setBlocking(false)
                     .apply {
+                        // The app's own traffic goes around the VPN: the
+                        // core's connections, and the downloads of
+                        // subscriptions and geo data while the core is
+                        // still starting, before it reads the TUN.
+                        addDisallowedApplication(packageName)
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) setMetered(false)
                         setConfigureIntent(mainIntent())
                     }
@@ -117,10 +123,11 @@ class ClashVpnService : VpnService() {
         val net = cm.activeNetwork ?: return emptyList()
         val caps = cm.getNetworkCapabilities(net)
         if (caps?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true) return emptyList()
-        return cm.getLinkProperties(net)?.dnsServers.orEmpty()
-            .sortedBy { if (it is Inet4Address) 0 else 1 }
-            .mapNotNull { it.hostAddress }
+        return cm.getLinkProperties(net)?.let(::dnsOf).orEmpty()
     }
+
+    private fun dnsOf(lp: LinkProperties): List<String> =
+        lp.dnsServers.sortedBy { if (it is Inet4Address) 0 else 1 }.mapNotNull { it.hostAddress }
 
     /**
      * Tells the system which network the VPN runs over, so that apps see
@@ -139,6 +146,12 @@ class ClashVpnService : VpnService() {
 
             override fun onLost(network: Network) {
                 setUnderlyingNetworks(null)
+            }
+
+            override fun onLinkPropertiesChanged(network: Network, lp: LinkProperties) {
+                // Wi-Fi to mobile data, or a new DHCP lease: "system" DNS
+                // in profiles follows.
+                Core.setDNS(dnsOf(lp))
             }
         }
         // requestNetwork, not registerNetworkCallback: only the best network.

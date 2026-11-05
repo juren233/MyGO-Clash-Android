@@ -53,3 +53,9 @@ func restoreSelections() {
 		_ = client.SelectProxy(ctx, s.Name, s.Now)
 	}
 }
+
+// SetDNS gives the core the DNS servers of the network under the VPN,
+// separated by commas, after the network changed.
+func SetDNS(dns string) {
+	setSystemDNS(splitList(dns))
+}

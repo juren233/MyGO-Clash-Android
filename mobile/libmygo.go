@@ -93,10 +93,12 @@ func currentPlatform() Platform {
 // Version returns the versions of the app's Go side and of mihomo.
 func Version() string { return corehost.AppVersion + " (mihomo " + corehost.MihomoVersion() + ")" }
 
-// Init opens the app's data in dir (the app's files directory) and
-// starts the core, which serves without a configuration until Start.
-// It is called once per process; later calls only replace the platform.
-func Init(dir string, p Platform) error {
+// Init opens the app's data in dir (the app's files directory) with the
+// master key that seals it (32 bytes, kept by the app in the Android
+// Keystore; empty keeps a key in a file of dir, for tests), and starts
+// the core, which serves without a configuration until Start. It is
+// called once per process; later calls only replace the platform.
+func Init(dir string, key []byte, p Platform) error {
 	mu.Lock()
 	defer mu.Unlock()
 	platform.Store(&platformBox{p})
@@ -112,8 +114,7 @@ func Init(dir string, p Platform) error {
 	}
 	installHooks()
 
-	// TODO: keep the master key in the Android Keystore.
-	sealer, err := openSealer(filepath.Join(dir, "secure"))
+	sealer, err := openSealer(filepath.Join(dir, "secure"), key)
 	if err != nil {
 		return fmt.Errorf("open the key: %w", err)
 	}
@@ -147,7 +148,10 @@ func Init(dir string, p Platform) error {
 	}
 }
 
-func openSealer(dir string) (*secure.Sealer, error) {
+func openSealer(dir string, key []byte) (*secure.Sealer, error) {
+	if len(key) > 0 {
+		return secure.NewSealer(key, keystore{})
+	}
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return nil, err
 	}
@@ -166,6 +170,16 @@ func openSealer(dir string) (*secure.Sealer, error) {
 	}
 	return secure.NewSealer(key, kr)
 }
+
+// keystore stands for the Android Keystore, which holds the master key on
+// the app's side: the sealer only names it.
+type keystore struct{}
+
+func (keystore) Get(string) ([]byte, error) { return nil, secure.ErrNotFound }
+func (keystore) Set(string, []byte) error   { return errors.ErrUnsupported }
+func (keystore) Delete(string) error        { return nil }
+func (keystore) Name() string               { return "android-keystore" }
+func (keystore) Secure() bool               { return true }
 
 // installHooks protects the core's sockets and names the apps of
 // connections, through the platform.

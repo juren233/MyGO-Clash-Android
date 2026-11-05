@@ -19,6 +19,10 @@ go install golang.org/x/mobile/cmd/gomobile golang.org/x/mobile/cmd/gobind
 PATH="$(go env GOPATH)/bin:$PATH"
 gomobile init
 
+# The geo databases the core carries, as desktop release builds do: a
+# first start with GEOIP or GEOSITE rules needs no download.
+go run ./tools/geodata
+
 version="$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' mygo.json | head -1)"
 mkdir -p android/app/libs
 # with_gvisor: the TUN stack; cmfa: mihomo's Android build for apps, which

@@ -39,7 +39,7 @@ func TestLifecycle(t *testing.T) {
 	defer sub.Close()
 
 	p := &fakePlatform{}
-	if err := Init(t.TempDir(), p); err != nil {
+	if err := Init(t.TempDir(), nil, p); err != nil {
 		t.Fatal(err)
 	}
 	// A free port for the proxy.
@@ -129,4 +129,23 @@ func TestLifecycle(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Logf("%s; %d sockets protected", Version(), p.protected.Load())
+}
+
+func TestSealerOfKey(t *testing.T) {
+	key := make([]byte, 32)
+	key[0] = 7
+	s, err := openSealer(t.TempDir(), key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sealed := s.Seal([]byte("secret"), "x")
+	if out, err := s.Unseal(sealed, "x"); err != nil || string(out) != "secret" {
+		t.Fatalf("unseal: %q %v", out, err)
+	}
+	if s.Keyring().Name() != "android-keystore" {
+		t.Fatal(s.Keyring().Name())
+	}
+	if _, err := openSealer(t.TempDir(), []byte("short")); err == nil {
+		t.Fatal("a short key was taken")
+	}
 }

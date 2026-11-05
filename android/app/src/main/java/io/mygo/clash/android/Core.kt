@@ -43,9 +43,12 @@ object Core {
     private lateinit var app: Context
 
     /** Opens the data of the app and starts the core, once per process. */
+    @Synchronized
     fun init(context: Context) {
+        if (::app.isInitialized) return
         app = context.applicationContext
-        Libmygo.init(app.filesDir.resolve("mygo").absolutePath, platform)
+        val dir = app.filesDir.resolve("mygo")
+        Libmygo.init(dir.absolutePath, MasterKey.get(app, dir), platform)
     }
 
     private val platform = object : Platform {
@@ -93,6 +96,11 @@ object Core {
     /** Starts the core with TUN on [fd], which it takes over. */
     fun start(fd: Int, dns: List<String>, options: Options) {
         Libmygo.start(fd, dns.joinToString(","), options)
+    }
+
+    /** Gives the core the DNS servers of the network under the VPN. */
+    fun setDNS(dns: List<String>) {
+        if (dns.isNotEmpty()) Libmygo.setDNS(dns.joinToString(","))
     }
 
     fun stop() {
