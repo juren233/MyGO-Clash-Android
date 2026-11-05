@@ -14,6 +14,7 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.net.VpnService
 import android.os.Build
+import android.os.ParcelFileDescriptor
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -33,9 +34,11 @@ class ClashVpnService : VpnService() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_STOP -> {
+                Settings(this).wasOn = false
                 stop()
                 return START_NOT_STICKY
             }
+            ACTION_RESTART -> restart()
             else -> start()
         }
         return START_STICKY
@@ -51,26 +54,11 @@ class ClashVpnService : VpnService() {
                 // The DNS of the network under the VPN, read before the
                 // VPN becomes the default network.
                 val dns = systemDNS()
-                val tun = Builder()
-                    .setSession(getString(R.string.app_name))
-                    .setMtu(MTU)
-                    .addAddress(TUN_IPV4, 30)
-                    .addRoute("0.0.0.0", 0)
-                    .addDnsServer(TUN_DNS)
-                    .setBlocking(false)
-                    .apply {
-                        // The app's own traffic goes around the VPN: the
-                        // core's connections, and the downloads of
-                        // subscriptions and geo data while the core is
-                        // still starting, before it reads the TUN.
-                        addDisallowedApplication(packageName)
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) setMetered(false)
-                        setConfigureIntent(mainIntent())
-                    }
-                    .establish() ?: throw IllegalStateException(getString(R.string.vpn_denied))
+                val tun = establish()
                 Core.vpn = this@ClashVpnService
                 Core.start(tun.detachFd(), dns, Core.options(this@ClashVpnService))
                 watchNetwork()
+                Settings(this@ClashVpnService).wasOn = true
                 Core.setState(VpnState.On)
                 ToggleTileService.refresh(this@ClashVpnService)
             } catch (e: Exception) {
@@ -81,6 +69,61 @@ class ClashVpnService : VpnService() {
                 stopSelfCompat()
             }
         }
+    }
+
+    /**
+     * Opens a new TUN with the settings as they are now: the core moves to
+     * it and closes the old one, without stopping.
+     */
+    private fun restart() {
+        if (Core.state.value != VpnState.On) return
+        scope.launch {
+            try {
+                Core.setState(VpnState.Starting)
+                val tun = establish()
+                Core.start(tun.detachFd(), systemDNS(), Core.options(this@ClashVpnService))
+                Core.setState(VpnState.On)
+            } catch (e: Exception) {
+                Log.e(TAG, "restart", e)
+                Core.stop()
+                Core.vpn = null
+                Core.setState(VpnState.Off, e.message ?: e.toString())
+                stopSelfCompat()
+            }
+        }
+    }
+
+    private fun establish(): ParcelFileDescriptor {
+        val s = Settings(this)
+        val b = Builder()
+            .setSession(getString(R.string.app_name))
+            .setMtu(MTU)
+            .addAddress(TUN_IPV4, 30)
+            .addRoute("0.0.0.0", 0)
+            .addDnsServer(TUN_DNS)
+            .setBlocking(false)
+            .setConfigureIntent(mainIntent())
+        if (s.ipv6) {
+            b.addAddress(TUN_IPV6, 126).addRoute("::", 0)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) b.setMetered(false)
+        val apps = s.apps - packageName
+        when (s.appMode) {
+            // Only the chosen apps: the app itself is not among them.
+            Settings.APPS_ALLOW -> apps.forEach { runCatching { b.addAllowedApplication(it) } }
+            else -> {
+                // The app's own traffic goes around the VPN: the core's
+                // connections, and the downloads of subscriptions and geo
+                // data while the core is still starting, before it reads
+                // the TUN.
+                b.addDisallowedApplication(packageName)
+                if (s.appMode == Settings.APPS_DENY) {
+                    // An app uninstalled since it was chosen is skipped.
+                    apps.forEach { runCatching { b.addDisallowedApplication(it) } }
+                }
+            }
+        }
+        return b.establish() ?: throw IllegalStateException(getString(R.string.vpn_denied))
     }
 
     private fun stop() {
@@ -198,11 +241,13 @@ class ClashVpnService : VpnService() {
         private const val CHANNEL = "vpn"
         private const val NOTIFICATION_ID = 1
         private const val ACTION_STOP = "io.mygo.clash.android.STOP"
+        private const val ACTION_RESTART = "io.mygo.clash.android.RESTART"
 
         // The TUN's addresses. The core's gvisor stack takes packets of any
         // address, and hijacks DNS on every address, port 53.
         private const val TUN_IPV4 = "172.19.0.1"
         private const val TUN_DNS = "172.19.0.2"
+        private const val TUN_IPV6 = "fdfe:dcba:9876::1"
         private const val MTU = 9000
 
         /** Starts the VPN; [VpnService.prepare] must have been granted. */
@@ -212,6 +257,13 @@ class ClashVpnService : VpnService() {
                 context.startForegroundService(intent)
             } else {
                 context.startService(intent)
+            }
+        }
+
+        /** Applies changed settings to the running VPN. */
+        fun restart(context: Context) {
+            if (Core.state.value == VpnState.On) {
+                context.startService(Intent(context, ClashVpnService::class.java).setAction(ACTION_RESTART))
             }
         }
 

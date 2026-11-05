@@ -51,7 +51,7 @@ fun HomePage(behavior: ScrollBehavior, padding: PaddingValues, onToggle: (Boolea
     val state by Core.state.collectAsState()
     val error by Core.error.collectAsState()
     var profileName by remember { mutableStateOf<String?>(null) }
-    var mode by remember { mutableStateOf(Settings.mode(context)) }
+    var mode by remember { mutableStateOf(Settings(context).mode) }
     var up by remember { mutableLongStateOf(0) }
     var down by remember { mutableLongStateOf(0) }
 

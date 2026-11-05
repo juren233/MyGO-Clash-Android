@@ -44,4 +44,33 @@
     <string name="notification_title">MyGO-Clash 运行中</string>
     <string name="notification_stop">停止</string>
     <string name="vpn_denied">代理需要 VPN 权限。</string>
+
+    <string name="tab_settings">设置</string>
+    <string name="section_network">网络</string>
+    <string name="section_apps">应用</string>
+    <string name="section_general">通用</string>
+    <string name="stack">TUN 协议栈</string>
+    <string name="stack_summary">gvisor 兼容性最好；system 和 mixed 在支持的设备上更快</string>
+    <string name="ipv6">IPv6</string>
+    <string name="ipv6_summary">IPv6 流量也走代理</string>
+    <string name="mixed_port">代理端口</string>
+    <string name="mixed_port_summary">HTTP 和 SOCKS 端口 %1$s；0 为关闭</string>
+    <string name="allow_lan">局域网连接</string>
+    <string name="allow_lan_summary">同一网络的其他设备可以使用代理端口</string>
+    <string name="log_level">日志级别</string>
+    <string name="app_mode">走代理的应用</string>
+    <string name="app_mode_all">全部应用</string>
+    <string name="app_mode_allow">仅选中的应用</string>
+    <string name="app_mode_deny">选中的应用以外</string>
+    <string name="choose_apps">选择应用</string>
+    <string name="apps_chosen">已选 %1$d 个</string>
+    <string name="show_system">显示系统应用</string>
+    <string name="search">搜索</string>
+    <string name="start_on_boot">开机自启</string>
+    <string name="start_on_boot_summary">开机后自动打开代理（关机前开着的话）</string>
+    <string name="battery">电池优化</string>
+    <string name="battery_summary">允许代理在后台持续运行</string>
+    <string name="applies_on_restart">已应用到运行中的代理</string>
+    <string name="save">保存</string>
+    <string name="back">返回</string>
 </resources>

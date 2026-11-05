@@ -90,7 +90,13 @@ object Core {
 
     /** The options of a start, from the settings. */
     fun options(context: Context): Options = Libmygo.newOptions().apply {
-        mode = Settings.mode(context)
+        val s = Settings(context)
+        mode = s.mode
+        stack = s.stack
+        iPv6 = s.ipv6
+        mixedPort = s.mixedPort
+        allowLAN = s.allowLan
+        logLevel = s.logLevel
     }
 
     /** Starts the core with TUN on [fd], which it takes over. */
@@ -130,7 +136,7 @@ object Core {
     }
 
     suspend fun setMode(context: Context, mode: String) {
-        Settings.setMode(context, mode)
+        Settings(context).mode = mode
         if (state.value == VpnState.On) request("PATCH", "/configs", JSONObject().put("mode", mode).toString())
     }
 
@@ -156,13 +162,4 @@ object Core {
     suspend fun deleteProfile(uid: String) = withContext(Dispatchers.IO) { Libmygo.deleteProfile(uid) }
 
     private fun enc(s: String): String = java.net.URLEncoder.encode(s, "UTF-8").replace("+", "%20")
-}
-
-/** The few settings of the prototype, in SharedPreferences. */
-object Settings {
-    private fun prefs(c: Context) = c.getSharedPreferences("settings", Context.MODE_PRIVATE)
-
-    fun mode(c: Context): String = prefs(c).getString("mode", "rule") ?: "rule"
-
-    fun setMode(c: Context, mode: String) = prefs(c).edit().putString("mode", mode).apply()
 }

@@ -58,6 +58,8 @@ type Options struct {
 	MixedPort int32
 	// IPv6 routes IPv6 too.
 	IPv6 bool
+	// AllowLAN opens the proxy port to other devices of the network.
+	AllowLAN bool
 	// LogLevel is mihomo's: debug, info, warning, error or silent.
 	LogLevel string
 }
@@ -265,7 +267,7 @@ func apply(fd int32, o *Options) error {
 		fd = currentFD
 	}
 	base := enhance.Base{
-		Mode: o.Mode, MixedPort: int(o.MixedPort), IPv6: o.IPv6, LogLevel: o.LogLevel,
+		Mode: o.Mode, MixedPort: int(o.MixedPort), IPv6: o.IPv6, LogLevel: o.LogLevel, AllowLAN: o.AllowLAN,
 		UnifiedDelay: true, TCPConcurrent: true,
 		// mihomo finds the app of a connection through the platform.
 		FindProcessMode: "strict",
