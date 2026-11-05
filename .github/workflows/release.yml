@@ -124,10 +124,18 @@ jobs:
             gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" --clobber "${manifests[@]}"
           fi
 
+  android:
+    needs: draft-release
+    uses: ./.github/workflows/android.yml
+    with:
+      tag: ${{ inputs.tag || github.ref_name }}
+    secrets: inherit
+
   finish:
     # Links the uploaded files from the notes, under their names on GitHub,
-    # and publishes a suffixed tag as the latest release.
-    needs: build
+    # and publishes a suffixed tag as the latest release. The Android APKs
+    # are linked when they built, but do not hold the release back.
+    needs: [build, android]
     if: ${{ !cancelled() && (needs.build.result == 'success' || inputs.notes_only) }}
     runs-on: ubuntu-latest
     steps:

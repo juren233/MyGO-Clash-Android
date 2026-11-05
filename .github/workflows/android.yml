@@ -1,6 +1,17 @@
 # Builds the Android app (android/): the Go side with gomobile, then the
-# APK with Gradle. The APK is a debug-signed prototype, uploaded as an
-# artifact of the run.
+# APKs with Gradle, one per ABI and a universal one, uploaded as an
+# artifact of the run. Called by the release workflow with a tag, it
+# uploads them to that release too.
+#
+# Release builds are signed with the key of these secrets, or with the
+# debug key without them:
+#   MYGO_ANDROID_KEYSTORE           the keystore (.jks), in Base64
+#   MYGO_ANDROID_KEYSTORE_PASSWORD
+#   MYGO_ANDROID_KEY_ALIAS
+#   MYGO_ANDROID_KEY_PASSWORD
+# A key is made with:
+#   keytool -genkeypair -v -keystore mygo-android.jks -alias mygo -keyalg RSA -keysize 4096 -validity 36500
+#   base64 -w0 mygo-android.jks | gh secret set MYGO_ANDROID_KEYSTORE
 name: Android
 
 on:
@@ -10,15 +21,21 @@ on:
   pull_request:
     paths: ["android/**", "mobile/**", "internal/**", "go.mod", "go.sum", ".github/workflows/android.yml"]
   workflow_dispatch:
-
-permissions:
-  contents: read
+  workflow_call:
+    inputs:
+      tag:
+        description: "The release to upload the APKs to"
+        type: string
+        required: true
 
 jobs:
   apk:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # the uploads to the release, when called with a tag
     env:
       NDK_VERSION: "29.0.14206865"
+      TAG: ${{ inputs.tag }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
@@ -35,10 +52,25 @@ jobs:
       - name: Build the Go library
         # ANDROID_HOME is the runner's, which ${{ env }} does not see.
         run: ANDROID_NDK_HOME="$ANDROID_HOME/ndk/$NDK_VERSION" android/build-aar.sh
-      - name: Build the APK
+      - name: Build the APKs
         working-directory: android
-        run: ./gradlew assembleRelease --console=plain
+        env:
+          KEYSTORE_B64: ${{ secrets.MYGO_ANDROID_KEYSTORE }}
+          MYGO_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.MYGO_ANDROID_KEYSTORE_PASSWORD }}
+          MYGO_ANDROID_KEY_ALIAS: ${{ secrets.MYGO_ANDROID_KEY_ALIAS }}
+          MYGO_ANDROID_KEY_PASSWORD: ${{ secrets.MYGO_ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            export MYGO_ANDROID_KEYSTORE="$RUNNER_TEMP/release.jks"
+          fi
+          ./gradlew dist --console=plain
       - uses: actions/upload-artifact@v4
         with:
           name: mygo-clash-android
-          path: android/app/build/outputs/apk/release/*.apk
+          path: android/app/build/dist/*.apk
+      - name: Upload to the release
+        if: env.TAG != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" --clobber android/app/build/dist/*.apk

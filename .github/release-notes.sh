@@ -84,6 +84,12 @@ if [ -n "$assets" ]; then
     printf -- '- 免 root 安装到 `~/.local`，可应用内自动更新 / Install for your user, without root, with in-app updates:\n\n'
     printf '  ```sh\n  curl -fsSL https://github.com/%s/releases/download/%s/install.sh | sh\n  ```\n' "$repo" "$tag"
   fi
+
+  # build.gradle.kts names the APKs "<slug>-<version>-android-<arch>.apk".
+  android="$(row 'APK' "$(link 'ARM64' '*-android-arm64.apk')" "$(link 'x86_64' '*-android-amd64.apk')" "$(link '通用 Universal' '*-android-universal.apk')")"
+  if [ -n "$android" ]; then
+    printf '\n### Android（预览 Preview）\n\n%s\n' "$android"
+  fi
 fi
 
 sed -e "s/{version}/$version/g" -e "s/{tag}/$tag/g" "$here/release-template.md"
