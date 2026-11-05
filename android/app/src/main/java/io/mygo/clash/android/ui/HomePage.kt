@@ -40,12 +40,13 @@ import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Switch
 import top.yukonga.miuix.kmp.basic.TabRow
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private val modes = listOf("rule", "global", "direct")
 
 @Composable
-fun HomePage(behavior: ScrollBehavior, padding: PaddingValues, onToggle: (Boolean) -> Unit) {
+fun HomePage(behavior: ScrollBehavior, padding: PaddingValues, onToggle: (Boolean) -> Unit, onOpen: (String) -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val state by Core.state.collectAsState()
@@ -109,6 +110,17 @@ fun HomePage(behavior: ScrollBehavior, padding: PaddingValues, onToggle: (Boolea
                     Stat(stringResource(R.string.upload), speed(up))
                     Stat(stringResource(R.string.download), speed(down))
                 }
+            }
+        }
+        item {
+            SmallTitle(stringResource(R.string.tools))
+            Card {
+                ArrowPreference(title = stringResource(R.string.connections), onClick = { onOpen(SUB_CONNECTIONS) })
+                ArrowPreference(
+                    title = stringResource(R.string.logs),
+                    summary = stringResource(R.string.logs_summary),
+                    onClick = { onOpen(SUB_LOGS) },
+                )
             }
         }
         item {

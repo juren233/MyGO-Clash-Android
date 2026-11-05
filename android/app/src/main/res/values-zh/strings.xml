@@ -73,4 +73,14 @@
     <string name="applies_on_restart">已应用到运行中的代理</string>
     <string name="save">保存</string>
     <string name="back">返回</string>
+
+    <string name="tools">工具</string>
+    <string name="connections">连接</string>
+    <string name="connections_summary">%1$d 个连接</string>
+    <string name="logs">日志</string>
+    <string name="logs_summary">内核输出的消息</string>
+    <string name="close_all">全部关闭</string>
+    <string name="no_connections">没有连接。</string>
+    <string name="no_logs">还没有消息。</string>
+    <string name="clear">清空</string>
 </resources>

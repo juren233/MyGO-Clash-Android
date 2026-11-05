@@ -9,7 +9,19 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+	"time"
 )
+
+type lines struct{ got chan string }
+
+func (l *lines) OnLine(line string) {
+	select {
+	case l.got <- line:
+	default:
+	}
+}
+
+func (l *lines) OnClose(string) {}
 
 type fakePlatform struct{ protected atomic.Int32 }
 
@@ -78,6 +90,30 @@ func TestLifecycle(t *testing.T) {
 	if !strings.Contains(body, `"now":"a"`) {
 		t.Fatalf("the group before selecting: %s", body)
 	}
+	// The logs stream while the core applies a configuration.
+	logs := &lines{got: make(chan string, 64)}
+	stream, err := Subscribe("/logs?level=info", logs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	time.Sleep(100 * time.Millisecond) // the stream connects
+	if err := Reload(); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case l := <-logs.got:
+		if !strings.Contains(l, `"payload"`) {
+			t.Fatalf("a log line: %s", l)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("no logs")
+	}
+	stream.Close()
+	conns, err := Request("GET", "/connections", "")
+	if err != nil || !strings.Contains(conns, `"connections"`) {
+		t.Fatalf("connections: %s %v", conns, err)
+	}
+
 	if err := SelectProxy("Proxy", "b"); err != nil {
 		t.Fatal(err)
 	}

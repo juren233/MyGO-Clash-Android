@@ -125,6 +125,9 @@ func Init(dir string, key []byte, p Platform) error {
 		return err
 	}
 	manager = m
+	// Remote profiles update on their schedule (a day, or what the
+	// provider suggests), and the current one applies again after.
+	go m.RunScheduler(context.Background(), onScheduledUpdate)
 
 	sock := filepath.Join(dir, "core.sock")
 	_ = os.Remove(sock)

@@ -52,22 +52,29 @@ fun MainScreen(onToggle: (Boolean) -> Unit, pendingImport: Import?, onImportHand
     )
     val icons = listOf(MiuixIcons.Home, MiuixIcons.Layers, MiuixIcons.ListView, MiuixIcons.Settings)
     val behaviors = Page.entries.map { MiuixScrollBehavior() }
-    val appsBehavior = MiuixScrollBehavior()
+    val subBehavior = MiuixScrollBehavior()
     val current = Page.entries[page]
     val profiles = rememberProfilesState()
-    // The app chooser, over the settings.
-    var choosingApps by rememberSaveable { mutableStateOf(false) }
+    // A page over a tab: the app chooser of the settings, the connections
+    // and the logs of the home page.
+    var sub by rememberSaveable { mutableStateOf<String?>(null) }
     val context = LocalContext.current
-    BackHandler(enabled = choosingApps) { choosingApps = false }
+    BackHandler(enabled = sub != null) { sub = null }
+    val subTitle = when (sub) {
+        SUB_APPS -> stringResource(R.string.choose_apps)
+        SUB_CONNECTIONS -> stringResource(R.string.connections)
+        SUB_LOGS -> stringResource(R.string.logs)
+        else -> null
+    }
 
     Scaffold(
         topBar = {
-            if (choosingApps && current == Page.Settings) {
+            if (subTitle != null) {
                 TopAppBar(
-                    title = stringResource(R.string.choose_apps),
-                    scrollBehavior = appsBehavior,
+                    title = subTitle,
+                    scrollBehavior = subBehavior,
                     navigationIcon = {
-                        IconButton(onClick = { choosingApps = false }, modifier = Modifier.padding(start = 12.dp)) {
+                        IconButton(onClick = { sub = null }, modifier = Modifier.padding(start = 12.dp)) {
                             Icon(MiuixIcons.Back, contentDescription = stringResource(R.string.back))
                         }
                     },
@@ -85,7 +92,10 @@ fun MainScreen(onToggle: (Boolean) -> Unit, pendingImport: Import?, onImportHand
                 Page.entries.forEach {
                     NavigationBarItem(
                         selected = it == current,
-                        onClick = { page = it.ordinal },
+                        onClick = {
+                            page = it.ordinal
+                            sub = null
+                        },
                         icon = icons[it.ordinal],
                         label = titles[it.ordinal],
                     )
@@ -93,18 +103,23 @@ fun MainScreen(onToggle: (Boolean) -> Unit, pendingImport: Import?, onImportHand
             }
         },
     ) { padding ->
-        when (current) {
-            Page.Home -> HomePage(behaviors[page], padding, onToggle)
-            Page.Proxies -> ProxiesPage(behaviors[page], padding)
-            Page.Profiles -> ProfilesPage(profiles, behaviors[page], padding, pendingImport, onImportHandled)
-            Page.Settings -> if (choosingApps) {
-                AppsPage(appsBehavior, padding, onChanged = { ClashVpnService.restart(context) })
-            } else {
-                SettingsPage(behaviors[page], padding, onChooseApps = { choosingApps = true })
+        when (sub) {
+            SUB_APPS -> AppsPage(subBehavior, padding, onChanged = { ClashVpnService.restart(context) })
+            SUB_CONNECTIONS -> ConnectionsPage(subBehavior, padding)
+            SUB_LOGS -> LogsPage(subBehavior, padding)
+            else -> when (current) {
+                Page.Home -> HomePage(behaviors[page], padding, onToggle, onOpen = { sub = it })
+                Page.Proxies -> ProxiesPage(behaviors[page], padding)
+                Page.Profiles -> ProfilesPage(profiles, behaviors[page], padding, pendingImport, onImportHandled)
+                Page.Settings -> SettingsPage(behaviors[page], padding, onChooseApps = { sub = SUB_APPS })
             }
         }
     }
 }
+
+const val SUB_APPS = "apps"
+const val SUB_CONNECTIONS = "connections"
+const val SUB_LOGS = "logs"
 
 /** The scrolling list of a page, which collapses the large title. */
 @Composable

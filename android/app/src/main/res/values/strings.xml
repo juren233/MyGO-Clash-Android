@@ -74,4 +74,14 @@
     <string name="applies_on_restart">Applied to the running proxy</string>
     <string name="save">Save</string>
     <string name="back">Back</string>
+
+    <string name="tools">Tools</string>
+    <string name="connections">Connections</string>
+    <string name="connections_summary">%1$d open</string>
+    <string name="logs">Logs</string>
+    <string name="logs_summary">The core\'s messages</string>
+    <string name="close_all">Close all</string>
+    <string name="no_connections">No connections.</string>
+    <string name="no_logs">No messages yet.</string>
+    <string name="clear">Clear</string>
 </resources>

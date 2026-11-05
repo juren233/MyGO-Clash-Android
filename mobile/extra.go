@@ -59,3 +59,16 @@ func restoreSelections() {
 func SetDNS(dns string) {
 	setSystemDNS(splitList(dns))
 }
+
+// onScheduledUpdate applies the current profile again after the scheduler
+// updated it.
+func onScheduledUpdate(uid string, err error) {
+	if err != nil {
+		return // the profile keeps the error, for the page to show
+	}
+	mu.Lock()
+	defer mu.Unlock()
+	if cur, ok := manager.Current(); ok && cur.UID == uid && running {
+		_ = apply(-1, lastOpts)
+	}
+}

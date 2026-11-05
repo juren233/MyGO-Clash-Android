@@ -59,6 +59,7 @@ class ClashVpnService : VpnService() {
                 Core.start(tun.detachFd(), dns, Core.options(this@ClashVpnService))
                 watchNetwork()
                 Settings(this@ClashVpnService).wasOn = true
+                Logs.start(Settings(this@ClashVpnService).logLevel)
                 Core.setState(VpnState.On)
                 ToggleTileService.refresh(this@ClashVpnService)
             } catch (e: Exception) {
@@ -82,6 +83,7 @@ class ClashVpnService : VpnService() {
                 Core.setState(VpnState.Starting)
                 val tun = establish()
                 Core.start(tun.detachFd(), systemDNS(), Core.options(this@ClashVpnService))
+                Logs.start(Settings(this@ClashVpnService).logLevel)
                 Core.setState(VpnState.On)
             } catch (e: Exception) {
                 Log.e(TAG, "restart", e)
@@ -127,6 +129,7 @@ class ClashVpnService : VpnService() {
     }
 
     private fun stop() {
+        Logs.stop()
         scope.launch {
             Core.stop() // closes the TUN
             Core.vpn = null
@@ -142,6 +145,7 @@ class ClashVpnService : VpnService() {
     }
 
     override fun onDestroy() {
+        Logs.stop()
         networkCallback?.let { getSystemService(ConnectivityManager::class.java).unregisterNetworkCallback(it) }
         networkCallback = null
         if (Core.state.value != VpnState.Off) {
