@@ -1,7 +1,7 @@
-# MyGO-Clash for Android（原型）
+# MyGO-Clash for Android（预览版）
 
-> 预览版：开关代理、订阅、节点、设置、分应用代理、连接和日志都有了；还没在大量真机上测过。
-> A preview: the proxy, profiles, proxies, settings, per-app proxy, connections and logs work; it has seen few real devices yet.
+> 预览版：开关代理、订阅、节点、设置、分应用代理、连接和日志都有了；还没在真机上测过。
+> A preview: the proxy, profiles, proxies, settings, per-app proxy, connections and logs work; it has not run on a real device yet.
 
 ## 结构
 
@@ -68,12 +68,14 @@ go test -tags with_gvisor ./mobile/
 - [x] 设置页：协议栈、端口、局域网、日志级别
 - [x] 订阅定时更新；连接页、日志页
 - [x] 按 ABI 拆包，正式签名，随桌面端版本一起发布
+- [x] 规则页；检测页（出口 IP 的三种视角、流媒体和 AI 服务解锁检测）
+- [x] 订阅编辑：名称、链接、User-Agent、自动更新间隔
 
 还没做：
 - [ ] 真机测试：界面和 VPN 只在 CI 和本地编译验证过，没有在真机上跑过
 - [ ] 内核和界面在同一进程，界面崩溃会带走 VPN。以后考虑把 VpnService 放到 `:core` 进程
-- [ ] 每个订阅的更新间隔、User-Agent 等选项，扩展（合并 / 脚本）的编辑界面
-- [ ] 规则页、解锁测试、出口 IP 查询
+- [ ] 扩展（合并 / 脚本）的编辑界面
+- [ ] 检测要经过代理端口（App 自身的流量不进 VPN），代理端口设为 0 时检测不可用
 - [ ] Tailscale（要和 TUN 共用一个 VPN）、WebDAV 同步
 - [ ] 界面只有中英文，桌面端的其他 13 种语言还没转换过来
 - [ ] Tailscale 编进去了但没用上，可以用构建标签去掉来减小 APK

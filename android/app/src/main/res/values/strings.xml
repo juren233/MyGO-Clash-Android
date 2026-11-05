@@ -84,4 +84,28 @@
     <string name="no_connections">No connections.</string>
     <string name="no_logs">No messages yet.</string>
     <string name="clear">Clear</string>
+
+    <string name="checks">Checks</string>
+    <string name="checks_summary">Exit IP and unlocks of streaming and AI services</string>
+    <string name="rules">Rules</string>
+    <string name="rules_summary">%1$d rules</string>
+    <string name="exit_ip">Exit IP</string>
+    <string name="view_domestic">Seen by sites in China</string>
+    <string name="view_global">Seen by sites abroad</string>
+    <string name="view_cloudflare">Seen by Cloudflare</string>
+    <string name="unlocks">Unlocks</string>
+    <string name="check">Check</string>
+    <string name="checks_need_port">The checks go through the proxy port: turn the proxy on, with a port.</string>
+    <string name="unlock_yes">Unlocked</string>
+    <string name="unlock_no">Blocked</string>
+    <string name="unlock_partial">Partly</string>
+    <string name="unlock_failed">Failed</string>
+    <string name="unlock_pending">Not checked</string>
+    <string name="search_rules">Search rules</string>
+    <string name="edit_profile">Edit the profile</string>
+    <string name="user_agent">User-Agent (optional)</string>
+    <string name="update_interval">Updates</string>
+    <string name="interval_auto">As the provider suggests, or daily</string>
+    <string name="interval_never">Never</string>
+    <string name="interval_hours">Every %1$d hours</string>
 </resources>

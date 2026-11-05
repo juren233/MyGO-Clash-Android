@@ -37,6 +37,7 @@ import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Add
 import top.yukonga.miuix.kmp.icon.extended.Delete
+import top.yukonga.miuix.kmp.icon.extended.Edit
 import top.yukonga.miuix.kmp.icon.extended.Refresh
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
@@ -52,6 +53,10 @@ data class ProfileItem(
     val total: Long,
     val expire: Long,
     val lastError: String,
+    val url: String,
+    val userAgent: String,
+    /** Minutes; 0 for the provider's suggestion, -1 for never. */
+    val interval: Int,
 )
 
 private fun itemOf(o: JSONObject): ProfileItem {
@@ -66,6 +71,9 @@ private fun itemOf(o: JSONObject): ProfileItem {
         total = usage?.optLong("total") ?: 0,
         expire = usage?.optLong("expire") ?: 0,
         lastError = o.optString("lastError"),
+        url = o.optString("url"),
+        userAgent = o.optJSONObject("option")?.optString("userAgent").orEmpty(),
+        interval = o.optJSONObject("option")?.let { if (it.optBoolean("noAutoUpdate")) -1 else it.optInt("updateInterval") } ?: 0,
     )
 }
 
@@ -77,6 +85,7 @@ class ProfilesState(private val scope: CoroutineScope) {
     var busy by mutableStateOf<String?>(null) // the uid being worked on, or "add"
     var error by mutableStateOf<String?>(null)
     var adding by mutableStateOf<Import?>(null) // the add dialog, when shown
+    var editing by mutableStateOf<ProfileItem?>(null) // the edit dialog, when shown
 
     fun reload() = scope.launch { load() }
 
@@ -148,6 +157,7 @@ fun ProfilesPage(
     }
 
     state.adding?.let { AddDialog(state, it) }
+    state.editing?.let { EditDialog(state, it) }
 }
 
 @Composable
@@ -176,6 +186,9 @@ private fun ProfileCard(p: ProfileItem, current: Boolean, busy: Boolean, state: 
                     IconButton(onClick = { state.run(p.uid) { Core.updateProfile(p.uid) } }) {
                         Icon(MiuixIcons.Refresh, contentDescription = stringResource(R.string.update))
                     }
+                }
+                IconButton(onClick = { state.editing = p }) {
+                    Icon(MiuixIcons.Edit, contentDescription = stringResource(R.string.edit_profile))
                 }
                 IconButton(onClick = { state.run(p.uid) { Core.deleteProfile(p.uid) } }) {
                     Icon(MiuixIcons.Delete, contentDescription = stringResource(R.string.delete))
@@ -220,6 +233,73 @@ private fun AddDialog(state: ProfilesState, initial: Import) {
                         }
                     },
                     enabled = !adding && url.isNotBlank(),
+                    colors = ButtonDefaults.textButtonColorsPrimary(),
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+    }
+}
+
+private val intervals = listOf(0, 6 * 60, 12 * 60, 24 * 60, 72 * 60, -1)
+
+@Composable
+private fun EditDialog(state: ProfilesState, p: ProfileItem) {
+    var name by remember(p) { mutableStateOf(p.name) }
+    var url by remember(p) { mutableStateOf(p.url) }
+    var ua by remember(p) { mutableStateOf(p.userAgent) }
+    var interval by remember(p) { mutableStateOf(if (p.interval in intervals) p.interval else 0) }
+    val saving = state.busy == p.uid
+    val labels = intervals.map {
+        when (it) {
+            0 -> stringResource(R.string.interval_auto)
+            -1 -> stringResource(R.string.interval_never)
+            else -> stringResource(R.string.interval_hours, it / 60)
+        }
+    }
+    WindowDialog(show = true, title = stringResource(R.string.edit_profile), onDismissRequest = { if (!saving) state.editing = null }) {
+        Column {
+            TextField(value = name, onValueChange = { name = it }, label = stringResource(R.string.profile_name), singleLine = true)
+            if (p.type == "remote") {
+                Spacer(Modifier.height(12.dp))
+                TextField(value = url, onValueChange = { url = it }, label = stringResource(R.string.profile_url), singleLine = true)
+                Spacer(Modifier.height(12.dp))
+                TextField(value = ua, onValueChange = { ua = it }, label = stringResource(R.string.user_agent), singleLine = true)
+                Spacer(Modifier.height(12.dp))
+                Card {
+                    top.yukonga.miuix.kmp.preference.WindowDropdownPreference(
+                        items = labels,
+                        selectedIndex = intervals.indexOf(interval).coerceAtLeast(0),
+                        title = stringResource(R.string.update_interval),
+                        onSelectedIndexChange = { interval = intervals[it] },
+                    )
+                }
+            }
+            state.error?.let {
+                Spacer(Modifier.height(8.dp))
+                Text(it, color = MiuixTheme.colorScheme.error)
+            }
+            Spacer(Modifier.height(16.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                TextButton(
+                    text = stringResource(R.string.cancel),
+                    onClick = { state.editing = null },
+                    enabled = !saving,
+                    modifier = Modifier.weight(1f),
+                )
+                TextButton(
+                    text = if (saving) stringResource(R.string.working) else stringResource(R.string.save),
+                    onClick = {
+                        val patch = JSONObject().put("name", name.trim())
+                        if (p.type == "remote") {
+                            patch.put("url", url.trim()).put("userAgent", ua.trim()).put("updateInterval", interval)
+                        }
+                        state.run(p.uid) {
+                            Core.patchProfile(p.uid, patch)
+                            state.editing = null
+                        }
+                    },
+                    enabled = !saving && name.isNotBlank() && (p.type != "remote" || url.isNotBlank()),
                     colors = ButtonDefaults.textButtonColorsPrimary(),
                     modifier = Modifier.weight(1f),
                 )

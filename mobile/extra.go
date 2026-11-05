@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/url"
@@ -72,3 +73,5 @@ func onScheduledUpdate(uid string, err error) {
 		_ = apply(-1, lastOpts)
 	}
 }
+
+func unmarshal(s string, v any) error { return json.Unmarshal([]byte(s), v) }

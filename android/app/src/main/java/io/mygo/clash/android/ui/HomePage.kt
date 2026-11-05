@@ -116,6 +116,12 @@ fun HomePage(behavior: ScrollBehavior, padding: PaddingValues, onToggle: (Boolea
             SmallTitle(stringResource(R.string.tools))
             Card {
                 ArrowPreference(title = stringResource(R.string.connections), onClick = { onOpen(SUB_CONNECTIONS) })
+                ArrowPreference(title = stringResource(R.string.rules), onClick = { onOpen(SUB_RULES) })
+                ArrowPreference(
+                    title = stringResource(R.string.checks),
+                    summary = stringResource(R.string.checks_summary),
+                    onClick = { onOpen(SUB_CHECKS) },
+                )
                 ArrowPreference(
                     title = stringResource(R.string.logs),
                     summary = stringResource(R.string.logs_summary),

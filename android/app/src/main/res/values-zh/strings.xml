@@ -83,4 +83,28 @@
     <string name="no_connections">没有连接。</string>
     <string name="no_logs">还没有消息。</string>
     <string name="clear">清空</string>
+
+    <string name="checks">检测</string>
+    <string name="checks_summary">出口 IP，流媒体和 AI 服务解锁</string>
+    <string name="rules">规则</string>
+    <string name="rules_summary">%1$d 条规则</string>
+    <string name="exit_ip">出口 IP</string>
+    <string name="view_domestic">国内网站看到的</string>
+    <string name="view_global">国外网站看到的</string>
+    <string name="view_cloudflare">Cloudflare 看到的</string>
+    <string name="unlocks">解锁检测</string>
+    <string name="check">检测</string>
+    <string name="checks_need_port">检测经由代理端口进行：请打开代理，并保留代理端口。</string>
+    <string name="unlock_yes">已解锁</string>
+    <string name="unlock_no">不可用</string>
+    <string name="unlock_partial">部分可用</string>
+    <string name="unlock_failed">检测失败</string>
+    <string name="unlock_pending">未检测</string>
+    <string name="search_rules">搜索规则</string>
+    <string name="edit_profile">编辑订阅</string>
+    <string name="user_agent">User-Agent（可选）</string>
+    <string name="update_interval">自动更新</string>
+    <string name="interval_auto">按服务商建议，默认每天</string>
+    <string name="interval_never">从不</string>
+    <string name="interval_hours">每 %1$d 小时</string>
 </resources>

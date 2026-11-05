@@ -149,7 +149,33 @@ object Core {
             }
         })
 
+    // ---- Checks, through the proxy ----
+
+    /** What a kind of site sees: view is domestic, global or cloudflare. */
+    suspend fun exitIP(view: String): JSONObject = withContext(Dispatchers.IO) { JSONObject(Libmygo.exitIP(view)) }
+
+    fun unlockList(): org.json.JSONArray = org.json.JSONArray(Libmygo.unlockList())
+
+    /** Checks the services; [onResult] gets each one as it arrives. */
+    fun checkUnlock(onResult: (JSONObject) -> Unit, onDone: () -> Unit) {
+        Libmygo.checkUnlock("", object : LineListener {
+            override fun onLine(line: String) {
+                runCatching { JSONObject(line) }.getOrNull()?.let(onResult)
+            }
+
+            override fun onClose(err: String) = onDone()
+        })
+    }
+
+    suspend fun rules(): org.json.JSONArray = JSONObject(request("GET", "/rules")).optJSONArray("rules") ?: org.json.JSONArray()
+
     // ---- Profiles ----
+
+    /** Changes a profile: a JSON object of name, url, userAgent, updateInterval. */
+    suspend fun patchProfile(uid: String, patch: JSONObject) = withContext(Dispatchers.IO) {
+        Libmygo.patchProfile(uid, patch.toString())
+    }
+
 
     suspend fun profiles(): JSONObject = withContext(Dispatchers.IO) { JSONObject(Libmygo.profiles()) }
 

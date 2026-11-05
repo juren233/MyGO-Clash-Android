@@ -161,6 +161,16 @@ func TestLifecycle(t *testing.T) {
 		c.Close()
 		t.Fatal("the proxy port is still open after Stop")
 	}
+	patched, err := PatchProfile(prof.UID, `{"name":"Renamed","updateInterval":-1,"userAgent":"ua/1"}`)
+	if err != nil || !strings.Contains(patched, `"name":"Renamed"`) || !strings.Contains(patched, `"noAutoUpdate":true`) || !strings.Contains(patched, `"userAgent":"ua/1"`) {
+		t.Fatalf("patched: %s %v", patched, err)
+	}
+	if !strings.Contains(UnlockList(), `"status":"pending"`) {
+		t.Fatal("no services to check")
+	}
+	if _, err := ExitIP("global"); err == nil {
+		t.Fatal("an exit IP without the proxy")
+	}
 	if err := DeleteProfile(prof.UID); err != nil {
 		t.Fatal(err)
 	}

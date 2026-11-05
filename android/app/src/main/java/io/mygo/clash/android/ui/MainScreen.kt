@@ -64,6 +64,8 @@ fun MainScreen(onToggle: (Boolean) -> Unit, pendingImport: Import?, onImportHand
         SUB_APPS -> stringResource(R.string.choose_apps)
         SUB_CONNECTIONS -> stringResource(R.string.connections)
         SUB_LOGS -> stringResource(R.string.logs)
+        SUB_CHECKS -> stringResource(R.string.checks)
+        SUB_RULES -> stringResource(R.string.rules)
         else -> null
     }
 
@@ -107,6 +109,8 @@ fun MainScreen(onToggle: (Boolean) -> Unit, pendingImport: Import?, onImportHand
             SUB_APPS -> AppsPage(subBehavior, padding, onChanged = { ClashVpnService.restart(context) })
             SUB_CONNECTIONS -> ConnectionsPage(subBehavior, padding)
             SUB_LOGS -> LogsPage(subBehavior, padding)
+            SUB_CHECKS -> ChecksPage(subBehavior, padding)
+            SUB_RULES -> RulesPage(subBehavior, padding)
             else -> when (current) {
                 Page.Home -> HomePage(behaviors[page], padding, onToggle, onOpen = { sub = it })
                 Page.Proxies -> ProxiesPage(behaviors[page], padding)
@@ -120,6 +124,8 @@ fun MainScreen(onToggle: (Boolean) -> Unit, pendingImport: Import?, onImportHand
 const val SUB_APPS = "apps"
 const val SUB_CONNECTIONS = "connections"
 const val SUB_LOGS = "logs"
+const val SUB_CHECKS = "checks"
+const val SUB_RULES = "rules"
 
 /** The scrolling list of a page, which collapses the large title. */
 @Composable
