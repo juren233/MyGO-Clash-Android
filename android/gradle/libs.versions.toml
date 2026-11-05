@@ -1,0 +1,17 @@
+[versions]
+agp = "9.5.0"
+kotlin = "2.4.21"
+miuix = "0.9.4"
+activity = "1.13.0"
+coroutines = "1.11.0"
+
+[libraries]
+miuix-ui = { module = "top.yukonga.miuix.kmp:miuix-ui-android", version.ref = "miuix" }
+miuix-preference = { module = "top.yukonga.miuix.kmp:miuix-preference-android", version.ref = "miuix" }
+miuix-icons = { module = "top.yukonga.miuix.kmp:miuix-icons-android", version.ref = "miuix" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

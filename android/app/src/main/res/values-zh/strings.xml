@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tab_home">首页</string>
+    <string name="tab_proxies">代理</string>
+    <string name="tab_profiles">订阅</string>
+
+    <string name="status_on">已连接</string>
+    <string name="status_off">未连接</string>
+    <string name="status_starting">正在连接…</string>
+    <string name="vpn_switch">代理</string>
+    <string name="vpn_switch_summary">本机流量经 %1$s 代理</string>
+    <string name="no_profile">没有订阅：全部直连</string>
+    <string name="mode">模式</string>
+    <string name="mode_rule">规则</string>
+    <string name="mode_global">全局</string>
+    <string name="mode_direct">直连</string>
+    <string name="traffic">流量</string>
+    <string name="upload">上传</string>
+    <string name="download">下载</string>
+    <string name="about">关于</string>
+    <string name="core_version">内核</string>
+
+    <string name="proxies_off">打开代理后可以查看和选择节点。</string>
+    <string name="test_delay">测试延迟</string>
+    <string name="timeout">超时</string>
+
+    <string name="profiles_empty">还没有订阅，点 + 添加。</string>
+    <string name="add_profile">添加订阅</string>
+    <string name="profile_url">订阅链接</string>
+    <string name="profile_name">名称（可选）</string>
+    <string name="add">添加</string>
+    <string name="cancel">取消</string>
+    <string name="update">更新</string>
+    <string name="delete">删除</string>
+    <string name="current">使用中</string>
+    <string name="updated_at">%1$s 更新</string>
+    <string name="usage">已用 %1$s / %2$s</string>
+    <string name="expires">%1$s 到期</string>
+    <string name="proxies_count">%1$d 个节点</string>
+    <string name="working">处理中…</string>
+    <string name="error">出错了</string>
+
+    <string name="notification_channel">代理</string>
+    <string name="notification_title">MyGO-Clash 运行中</string>
+    <string name="notification_stop">停止</string>
+    <string name="vpn_denied">代理需要 VPN 权限。</string>
+</resources>

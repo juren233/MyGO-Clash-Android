@@ -1,0 +1,45 @@
+# Builds the Android app (android/): the Go side with gomobile, then the
+# APK with Gradle. The APK is a debug-signed prototype, uploaded as an
+# artifact of the run.
+name: Android
+
+on:
+  push:
+    branches: [main, "android-*"]
+    paths: ["android/**", "mobile/**", "internal/**", "go.mod", "go.sum", ".github/workflows/android.yml"]
+  pull_request:
+    paths: ["android/**", "mobile/**", "internal/**", "go.mod", "go.sum", ".github/workflows/android.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    env:
+      NDK_VERSION: "29.0.14206865"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: Test the Go side
+        run: go test -tags with_gvisor ./mobile/
+      - name: Install the SDK platform and the NDK
+        # The runner has the Android SDK and Java 21.
+        run: |
+          echo "JAVA_HOME=$JAVA_HOME_21_X64" >> "$GITHUB_ENV"
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.0" "build-tools;37.0.0" "ndk;$NDK_VERSION"
+      - name: Build the Go library
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/${{ env.NDK_VERSION }}
+        run: android/build-aar.sh
+      - name: Build the APK
+        working-directory: android
+        run: ./gradlew assembleRelease --console=plain
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mygo-clash-android
+          path: android/app/build/outputs/apk/release/*.apk
