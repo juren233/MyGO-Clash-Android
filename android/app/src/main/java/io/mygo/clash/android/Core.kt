@@ -171,6 +171,14 @@ object Core {
 
     // ---- Profiles ----
 
+    /** The UID of a profile's extension: kind is merge or script. */
+    suspend fun extensionOf(uid: String, kind: String): String = withContext(Dispatchers.IO) { Libmygo.extensionOf(uid, kind) }
+
+    suspend fun content(uid: String): String = withContext(Dispatchers.IO) { Libmygo.content(uid) }
+
+    /** Checks and saves an item's content; the running core applies it. */
+    suspend fun setContent(uid: String, content: String) = withContext(Dispatchers.IO) { Libmygo.setContent(uid, content) }
+
     /** Changes a profile: a JSON object of name, url, userAgent, updateInterval. */
     suspend fun patchProfile(uid: String, patch: JSONObject) = withContext(Dispatchers.IO) {
         Libmygo.patchProfile(uid, patch.toString())

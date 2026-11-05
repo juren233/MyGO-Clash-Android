@@ -58,6 +58,14 @@ fun MainScreen(onToggle: (Boolean) -> Unit, pendingImport: Import?, onImportHand
     // A page over a tab: the app chooser of the settings, the connections
     // and the logs of the home page.
     var sub by rememberSaveable { mutableStateOf<String?>(null) }
+    // The extension the editor shows.
+    var editorUid by rememberSaveable { mutableStateOf("") }
+    var editorTitle by rememberSaveable { mutableStateOf("") }
+    val openEditor = { uid: String, title: String ->
+        editorUid = uid
+        editorTitle = title
+        sub = SUB_EDITOR
+    }
     val context = LocalContext.current
     BackHandler(enabled = sub != null) { sub = null }
     val subTitle = when (sub) {
@@ -66,6 +74,7 @@ fun MainScreen(onToggle: (Boolean) -> Unit, pendingImport: Import?, onImportHand
         SUB_LOGS -> stringResource(R.string.logs)
         SUB_CHECKS -> stringResource(R.string.checks)
         SUB_RULES -> stringResource(R.string.rules)
+        SUB_EDITOR -> editorTitle
         else -> null
     }
 
@@ -111,11 +120,12 @@ fun MainScreen(onToggle: (Boolean) -> Unit, pendingImport: Import?, onImportHand
             SUB_LOGS -> LogsPage(subBehavior, padding)
             SUB_CHECKS -> ChecksPage(subBehavior, padding)
             SUB_RULES -> RulesPage(subBehavior, padding)
+            SUB_EDITOR -> EditorPage(editorUid, subBehavior, padding)
             else -> when (current) {
                 Page.Home -> HomePage(behaviors[page], padding, onToggle, onOpen = { sub = it })
                 Page.Proxies -> ProxiesPage(behaviors[page], padding)
-                Page.Profiles -> ProfilesPage(profiles, behaviors[page], padding, pendingImport, onImportHandled)
-                Page.Settings -> SettingsPage(behaviors[page], padding, onChooseApps = { sub = SUB_APPS })
+                Page.Profiles -> ProfilesPage(profiles, behaviors[page], padding, pendingImport, onImportHandled, openEditor)
+                Page.Settings -> SettingsPage(behaviors[page], padding, onChooseApps = { sub = SUB_APPS }, onEdit = openEditor)
             }
         }
     }
@@ -126,6 +136,7 @@ const val SUB_CONNECTIONS = "connections"
 const val SUB_LOGS = "logs"
 const val SUB_CHECKS = "checks"
 const val SUB_RULES = "rules"
+const val SUB_EDITOR = "editor"
 
 /** The scrolling list of a page, which collapses the large title. */
 @Composable

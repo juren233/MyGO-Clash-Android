@@ -115,3 +115,57 @@ func PatchProfile(uid, patch string) (string, error) {
 	}
 	return marshal(out)
 }
+
+// GlobalMerge and GlobalScript are the UIDs of the extensions of every
+// profile.
+const (
+	GlobalMerge  = profiles.GlobalMerge
+	GlobalScript = profiles.GlobalScript
+)
+
+// ExtensionOf returns the UID of a profile's extension of a kind (merge
+// or script), creating it from its template the first time.
+func ExtensionOf(uid, kind string) (string, error) {
+	mu.Lock()
+	defer mu.Unlock()
+	if err := ready(); err != nil {
+		return "", err
+	}
+	return manager.Extension(uid, kind)
+}
+
+// Content returns what an item holds: a profile's YAML, or an
+// extension's YAML or script.
+func Content(uid string) (string, error) {
+	mu.Lock()
+	defer mu.Unlock()
+	if err := ready(); err != nil {
+		return "", err
+	}
+	data, err := manager.Content(uid)
+	return string(data), err
+}
+
+// SetContent checks and saves what an item holds, and applies the
+// configuration again when the core runs.
+func SetContent(uid, content string) error {
+	mu.Lock()
+	defer mu.Unlock()
+	if err := ready(); err != nil {
+		return err
+	}
+	item, err := manager.Get(uid)
+	if err != nil {
+		return err
+	}
+	if err := profiles.Check(item.Type, []byte(content)); err != nil {
+		return err
+	}
+	if err := manager.SetContent(uid, []byte(content)); err != nil {
+		return err
+	}
+	if running {
+		return apply(-1, lastOpts)
+	}
+	return nil
+}

@@ -171,6 +171,30 @@ func TestLifecycle(t *testing.T) {
 	if _, err := ExitIP("global"); err == nil {
 		t.Fatal("an exit IP without the proxy")
 	}
+	// A merge that adds a proxy reaches the running core.
+	ext, err := ExtensionOf(prof.UID, "merge")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := SetContent(ext, "proxies: [\n"); err == nil {
+		t.Fatal("invalid YAML was saved")
+	}
+	if err := Start(-1, "", o); err != nil { // running again, after Stop
+		t.Fatal(err)
+	}
+	if err := SetContent(ext, "prepend-proxies:\n  - {name: merged, type: http, server: 127.0.0.1, port: 3}\n"); err != nil {
+		t.Fatal(err)
+	}
+	if body, _ := Request("GET", "/proxies/merged", ""); !strings.Contains(body, `"name":"merged"`) {
+		t.Fatalf("the merge did not apply: %s", body)
+	}
+	if got, _ := Content(ext); !strings.Contains(got, "merged") {
+		t.Fatalf("content: %s", got)
+	}
+	if _, err := Content(GlobalScript); err != nil {
+		t.Fatal(err)
+	}
+	_ = Stop()
 	if err := DeleteProfile(prof.UID); err != nil {
 		t.Fatal(err)
 	}

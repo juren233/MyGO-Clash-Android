@@ -108,4 +108,13 @@
     <string name="interval_auto">As the provider suggests, or daily</string>
     <string name="interval_never">Never</string>
     <string name="interval_hours">Every %1$d hours</string>
+
+    <string name="section_extensions">Extensions</string>
+    <string name="global_merge">Global merge</string>
+    <string name="global_merge_summary">YAML merged into every profile</string>
+    <string name="global_script">Global script</string>
+    <string name="global_script_summary">JavaScript that changes every profile</string>
+    <string name="profile_merge">Merge</string>
+    <string name="profile_script">Script</string>
+    <string name="saved">Saved</string>
 </resources>

@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import io.mygo.clash.android.ClashVpnService
 import io.mygo.clash.android.R
 import io.mygo.clash.android.Settings
+import io.mygo.clash.libmygo.Libmygo
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
@@ -42,7 +43,12 @@ private val logLevels = listOf("debug", "info", "warning", "error", "silent")
 private val appModes = listOf(Settings.APPS_ALL, Settings.APPS_ALLOW, Settings.APPS_DENY)
 
 @Composable
-fun SettingsPage(behavior: ScrollBehavior, padding: PaddingValues, onChooseApps: () -> Unit) {
+fun SettingsPage(
+    behavior: ScrollBehavior,
+    padding: PaddingValues,
+    onChooseApps: () -> Unit,
+    onEdit: (uid: String, title: String) -> Unit,
+) {
     val context = LocalContext.current
     val settings = remember { Settings(context) }
     // A change of the TUN reaches the running VPN by a restart of the TUN.
@@ -130,6 +136,23 @@ fun SettingsPage(behavior: ScrollBehavior, padding: PaddingValues, onChooseApps:
                         onClick = onChooseApps,
                     )
                 }
+            }
+        }
+        item {
+            SmallTitle(stringResource(R.string.section_extensions))
+            Card {
+                val merge = stringResource(R.string.global_merge)
+                val script = stringResource(R.string.global_script)
+                ArrowPreference(
+                    title = merge,
+                    summary = stringResource(R.string.global_merge_summary),
+                    onClick = { onEdit(Libmygo.GlobalMerge, merge) },
+                )
+                ArrowPreference(
+                    title = script,
+                    summary = stringResource(R.string.global_script_summary),
+                    onClick = { onEdit(Libmygo.GlobalScript, script) },
+                )
             }
         }
         item {

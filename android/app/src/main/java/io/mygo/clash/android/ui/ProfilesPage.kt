@@ -133,6 +133,7 @@ fun ProfilesPage(
     padding: PaddingValues,
     pendingImport: Import?,
     onImportHandled: () -> Unit,
+    onEdit: (uid: String, title: String) -> Unit,
 ) {
     LaunchedEffect(Unit) { state.load() }
     LaunchedEffect(pendingImport) {
@@ -157,7 +158,7 @@ fun ProfilesPage(
     }
 
     state.adding?.let { AddDialog(state, it) }
-    state.editing?.let { EditDialog(state, it) }
+    state.editing?.let { EditDialog(state, it, onEdit) }
 }
 
 @Composable
@@ -244,7 +245,21 @@ private fun AddDialog(state: ProfilesState, initial: Import) {
 private val intervals = listOf(0, 6 * 60, 12 * 60, 24 * 60, 72 * 60, -1)
 
 @Composable
-private fun EditDialog(state: ProfilesState, p: ProfileItem) {
+private fun EditDialog(state: ProfilesState, p: ProfileItem, onEdit: (uid: String, title: String) -> Unit) {
+    val scope = rememberCoroutineScope()
+    val mergeTitle = p.name + " · " + stringResource(R.string.profile_merge)
+    val scriptTitle = p.name + " · " + stringResource(R.string.profile_script)
+    // Opens the profile's extension of a kind in the editor.
+    fun edit(kind: String, title: String) {
+        scope.launch {
+            runCatching { Core.extensionOf(p.uid, kind) }
+                .onSuccess {
+                    state.editing = null
+                    onEdit(it, title)
+                }
+                .onFailure { state.error = it.message }
+        }
+    }
     var name by remember(p) { mutableStateOf(p.name) }
     var url by remember(p) { mutableStateOf(p.url) }
     var ua by remember(p) { mutableStateOf(p.userAgent) }
@@ -274,6 +289,11 @@ private fun EditDialog(state: ProfilesState, p: ProfileItem) {
                         onSelectedIndexChange = { interval = intervals[it] },
                     )
                 }
+            }
+            Spacer(Modifier.height(12.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                TextButton(text = stringResource(R.string.profile_merge), onClick = { edit("merge", mergeTitle) }, modifier = Modifier.weight(1f))
+                TextButton(text = stringResource(R.string.profile_script), onClick = { edit("script", scriptTitle) }, modifier = Modifier.weight(1f))
             }
             state.error?.let {
                 Spacer(Modifier.height(8.dp))

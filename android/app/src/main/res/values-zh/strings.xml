@@ -107,4 +107,13 @@
     <string name="interval_auto">按服务商建议，默认每天</string>
     <string name="interval_never">从不</string>
     <string name="interval_hours">每 %1$d 小时</string>
+
+    <string name="section_extensions">扩展</string>
+    <string name="global_merge">全局合并</string>
+    <string name="global_merge_summary">合并进每个订阅的 YAML</string>
+    <string name="global_script">全局脚本</string>
+    <string name="global_script_summary">修改每个订阅的 JavaScript</string>
+    <string name="profile_merge">合并</string>
+    <string name="profile_script">脚本</string>
+    <string name="saved">已保存</string>
 </resources>
